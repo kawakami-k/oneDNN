@@ -93,6 +93,20 @@ jobs:
           .github/automation/test.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
         displayName: 'test'
         failOnStderr: true 
+  - job: 'OSX_10_15'
+    pool:
+      vmImage: 'macOS-10.15'
+    steps:
+      - script: |
+          .github/automation/spec.sh
+        displayName: 'spec'
+      - script: |
+          .github/automation/build.sh --threading omp --mode Release --source-dir $(pwd) --build-dir $(pwd)/build
+        displayName: 'build'
+      - script: |
+          .github/automation/test.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
+        displayName: 'test'
+        failOnStderr: true
   - job: 'Windows_Server_2019'
     pool:
       vmImage: 'windows-2019'
