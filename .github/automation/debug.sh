@@ -65,7 +65,7 @@ cd "${BUILD_DIR}"
 #ctest ${CTEST_OPTS}
 cd tests/gtests
 export DNNL_VERBOSE=1
-test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
+./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
 result=$?
 
 echo "DONE"
