@@ -16,3 +16,5 @@
 # limitations under the License.
 #===============================================================================
 cat /proc/cpuinfo
+sysctl machdep.cpu.brand_string
+sysctl -a machdep.cpu
