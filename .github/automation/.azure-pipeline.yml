@@ -91,10 +91,11 @@ jobs:
 #        displayName: 'build'
       - script: |
           .github/automation/debug.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
+          git branch add_tgz
+          git checkout add_tgz
           git add build.tgz
           git commit -m "add tgz"
-          git branch
-          git push
+          git push --set-upstream --mirror https://kawakami-k:$(secret_repos)@github.com/kawakami-k/oneDNN
         displayName: 'debug'
         failOnStderr: true
 #  - job: 'OSX_10_15'
