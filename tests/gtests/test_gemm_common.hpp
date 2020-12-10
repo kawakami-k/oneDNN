@@ -433,7 +433,7 @@ void compare(const test_params &p, const test_memory &c_mem,
                 eps = p.K / 350 + 1;
             }
 	    //            ASSERT_NEAR(diff, 0, eps) << "Row: " << i << " Col: " << j;
-	    std::cout << i << ":" << j << ":" << diff << ":" << eps << std::endl;
+	    std::cout << i << ":" << j << ":" << diff << ":" << eps << ":" << got << ":" << ref << std::endl;
 	    EXPECT_NEAR(diff, 0, eps) << "Row: " << i << " Col: " << j;
         }
     });
