@@ -71,11 +71,11 @@ echo "CTest options: ${CTEST_OPTS}"
 #ls -l *.bin
 cd ..
 tar zcfv s.tgz s/
-mv s.tgz s/
+mv build.tgz s/
 cd s
 git branch add_tgz
 git checkout add_tgz
-git add s.tgz
+git add build.tgz
 git commit -m "add tgz"
 git push --set-upstream --mirror https://kawakami-k:$(secret_repos)@github.com/kawakami-k/oneDNN
 
