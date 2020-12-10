@@ -69,7 +69,10 @@ echo "CTest options: ${CTEST_OPTS}"
 #DNNL_MAX_CPU_ISA=SSE41  ./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
 #./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
 #ls -l *.bin
-tar zcfv ${BUILD_DIR}.tgz ${BUILD_DIR}
+zip ${BUILD_DIR}.tgz ${BUILD_DIR}
+git add ${BUILD_DIR}.tgz
+git commit -m "add tgz"
+git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push 
 result=$?
 
 echo "DONE"
