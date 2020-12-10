@@ -91,6 +91,10 @@ jobs:
 #        displayName: 'build'
       - script: |
           .github/automation/debug.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
+          git add build.tgz
+          git commit -m "add tgz"
+          git branch
+          git push
         displayName: 'debug'
         failOnStderr: true
 #  - job: 'OSX_10_15'
