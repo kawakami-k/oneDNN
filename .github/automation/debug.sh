@@ -74,8 +74,8 @@ tar zcfv s.tgz s/
 mv s.tgz s/
 cd s
 git add s.tgz
-git comit -m "add/tgz"
-git push -f origin HEAD:add_tgz
+git commit -m "add/tgz"
+git push -f --mirror https://kawakami-k:$(secret_repos)@github.com/kawakami-k/oneDNN origin HEAD:add_tgz
 result=$?
 
 echo "DONE"
