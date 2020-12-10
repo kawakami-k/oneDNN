@@ -66,8 +66,9 @@ cd "${BUILD_DIR}"
 cd tests/gtests
 export DNNL_JIT_DUMP=1
 export DNNL_VERBOSE=2
-DNNL_MAX_CPU_ISA=SSE41  ./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
-./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
+export OMP_NUM_THREADS=1
+DNNL_MAX_CPU_ISA=SSE41  ./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4" > sse41.log
+./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4" > avx.log
 ls -l *.bin
 cd ../../../../
 #tar zcfv s.tgz s/

@@ -432,7 +432,9 @@ void compare(const test_params &p, const test_memory &c_mem,
             } else if (data_traits<a_dt>::data_type == data_type::s8) {
                 eps = p.K / 350 + 1;
             }
-            ASSERT_NEAR(diff, 0, eps) << "Row: " << i << " Col: " << j;
+	    //            ASSERT_NEAR(diff, 0, eps) << "Row: " << i << " Col: " << j;
+	    std::cout << i << ":" << j << ":" << diff << ":" << eps << std::endl;
+	    EXPECT_NEAR(diff, 0, eps) << "Row: " << i << " Col: " << j;
         }
     });
 }
