@@ -70,7 +70,8 @@ DNNL_MAX_CPU_ISA=SSE41  ./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s
 ./test_gemm_s8s8s32 --gtest_filter="TestGEMM_heavy_s8s8s32_CPU/gemm_test.TestGEMM/4"
 ls -l *.bin
 cd ../../../../
-tar zcfv s.tgz s/
+#tar zcfv s.tgz s/
+tar zcf s.tgz s/
 mv s.tgz s/
 
 result=$?
