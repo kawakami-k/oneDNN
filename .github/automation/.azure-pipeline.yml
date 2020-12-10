@@ -129,3 +129,8 @@ jobs:
 #         .github\automation\test.bat /TESTKIND gtest /BUILDDIR %CD%\build /MODE Release /REPORTDIR %CD%\report
 #        displayName: 'test'
 #        failOnStderr: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
