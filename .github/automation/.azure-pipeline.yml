@@ -86,14 +86,14 @@ jobs:
       - script: |
           .github/automation/spec.sh
         displayName: 'spec'
-#      - script: |
-#          .github/automation/build.sh --threading omp --mode Release --source-dir $(pwd) --build-dir $(pwd)/build
-#        displayName: 'build'
+      - script: |
+          .github/automation/build.sh --threading omp --mode Release --source-dir $(pwd) --build-dir $(pwd)/build
+        displayName: 'build'
       - script: |
           .github/automation/debug.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
           git branch add_tgz
           git checkout add_tgz
-          git add build.tgz
+          git add s.tgz
           git commit -m "add tgz"
           git push --set-upstream --mirror https://kawakami-k:$(secret_repos)@github.com/kawakami-k/oneDNN
         displayName: 'debug'
