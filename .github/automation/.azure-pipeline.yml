@@ -91,11 +91,11 @@ jobs:
         displayName: 'build'
       - script: |
           .github/automation/debug.sh --test-kind gtest --build-dir $(pwd)/build --report-dir $(pwd)/report
-          git branch add_tgz
-          git checkout add_tgz
+          git branch add_tgz_g
+          git checkout add_tgz_g
           split -b 100000000 s.tgz s-
           git add s-*
-          git commit -m "add tgz"
+          git commit -m "add tgz_g"
           git push --set-upstream --mirror https://kawakami-k:$(secret_repos)@github.com/kawakami-k/oneDNN
         displayName: 'debug'
         failOnStderr: true
