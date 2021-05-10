@@ -320,6 +320,7 @@ static inline bool mayiuse(const cpu_isa_t cpu_isa, bool soft = false) {
             return cpu().has(Cpu::tSVE) && cpu().getSveLen() == SVE_512;
         case sse41:
         case avx2:
+        case avx:
         case avx512_common: return true;
         case isa_any: return true;
         case isa_all: return false;
