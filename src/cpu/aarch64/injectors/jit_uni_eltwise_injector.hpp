@@ -162,20 +162,27 @@ private:
 
     static constexpr size_t vlen = cpu_isa_traits<isa>::vlen;
     static constexpr size_t preserved_vecs_max = 9;
+    static constexpr size_t preserved_pregs_max = 5;
     static constexpr size_t preserved_gprs_max = 4;
     static constexpr size_t vecs_count = 32;
     static constexpr int n_mantissa_bits = 23;
     static constexpr int k_mask_size = 8;
 
     size_t vecs_to_preserve = 0;
+    size_t pregs_to_preserve = 0;
     size_t preserved_vecs_count = 0;
+    size_t preserved_pregs_count = 0;
     size_t preserved_vec_idxs[preserved_vecs_max] = {0};
+    size_t preserved_preg_idxs[preserved_pregs_max] = {0};
     size_t preserved_gpr_idxs[preserved_gprs_max] = {0};
     injector_utils::vmm_index_set_iterator_t start_idx_tail;
 
     /* These vector register must be assigned proper index. */
     TRegS vmm_mask {0}, vmm_aux0 {0}, vmm_aux1 {0}, vmm_aux2 {0}, vmm_aux3 {0},
             vmm_aux4 {0}, vmm_aux5 {0}, vmm_aux6 {0}, vmm_aux7 {0}, vmm_tmp {0};
+    /* These predicate register must be assigned proper index. */
+    Xbyak_aarch64::PReg preg_log0 {0}, preg_log1 {0};
+    Xbyak_aarch64::PReg preg_exp0 {0}, preg_exp1 {0};
     /* Default tempooral index. Chose a SVE register
      not to be same as jit_uni_eltwise.(cpp|hpp).
      This index is changed by assign_regs() in case of eltwise injection.
@@ -183,6 +190,7 @@ private:
     TRegS z_tmp {31};
 
     size_t aux_vecs_count();
+    size_t aux_pregs_count();
     size_t aux_gprs_count();
 
     void compute_body(
@@ -193,6 +201,7 @@ private:
             const injector_utils::vmm_index_set_iterator_t start_idx_it);
     void injector_postamble();
     void assign_regs();
+    void assign_pred_regs();
     void set_coef_to_regs();
     void compute_cmp_mask(
             const TRegS &vmm_src, const TRegS &vmm_cmpare, int cmp_predicate);

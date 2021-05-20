@@ -37,7 +37,9 @@ void jit_uni_eltwise_injector_f32<isa>::injector_preamble(
     using namespace alg_kind;
     using namespace Xbyak_aarch64::util;
     preserved_vecs_count = 0;
+    preserved_pregs_count = 0;
     vecs_to_preserve = aux_vecs_count();
+    pregs_to_preserve = aux_pregs_count();
     const auto start_idx = *(vmm_idxs.begin());
     const auto end_idx = *(vmm_idxs.rbegin()) + 1;
     start_idx_tail = vmm_idxs.begin();
@@ -74,6 +76,15 @@ void jit_uni_eltwise_injector_f32<isa>::injector_preamble(
     }
     assert(preserved_gprs_count == aux_gprs_count());
 
+    for (size_t idx = 0; idx <= 7; ++idx) {
+        if (preserved_pregs_count >= pregs_to_preserve) break;
+        if (idx == p_mask.getIdx() || idx == p_512.getIdx()
+                || idx == p_tmp0.getIdx())
+            continue;
+
+        preserved_preg_idxs[preserved_pregs_count++] = idx;
+    }
+
     h->xa_->ptrue(p_512.b);
 
     if (save_state_) {
@@ -89,7 +100,6 @@ void jit_uni_eltwise_injector_f32<isa>::injector_preamble(
                     h->X_SP, h->X_SP, preserved_vecs_count * vlen, h->X_TMP_0);
 
         size_t i = 0;
-
         while (i < preserved_vecs_count) {
             int count = 0;
             int ii = i;
@@ -103,10 +113,27 @@ void jit_uni_eltwise_injector_f32<isa>::injector_preamble(
                 h->xa_->st1w(ZRegS(preserved_vec_idxs[ii++]), p_512,
                         ptr(h->x_tmp_vec[j]));
         }
+
+        i = 0;
+        while (i < preserved_pregs_count) {
+            int count = 0;
+            int ii = i;
+            do {
+                h->xa_->add_imm(h->x_tmp_vec[count++], h->X_SP, i * vlen / 8,
+                        h->X_DEFAULT_ADDR);
+                i++;
+            } while (i < preserved_vecs_count && count < h->x_tmp_vec_size);
+
+            for (int j = 0; j < count; j++)
+                h->xa_->str(
+                        PReg(preserved_preg_idxs[ii++]), ptr(h->x_tmp_vec[j]));
+        }
+
         load_table_addr();
     }
 
     assign_regs();
+    assign_pred_regs();
     set_coef_to_regs();
 }
 
@@ -173,9 +200,22 @@ template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::injector_postamble() {
     using namespace Xbyak_aarch64::util;
     if (!save_state_) return;
-
     size_t i = 0;
 
+    while (i < preserved_pregs_count) {
+        int count = 0;
+        int ii = i;
+        do {
+            h->xa_->add_imm(h->x_tmp_vec[count++], h->X_SP, i * vlen / 8,
+                    h->X_DEFAULT_ADDR);
+            i++;
+        } while (i < preserved_pregs_count && count < h->x_tmp_vec_size);
+
+        for (int j = 0; j < count; j++)
+            h->xa_->ldr(PReg(preserved_preg_idxs[ii++]), ptr(h->x_tmp_vec[j]));
+    }
+
+    i = 0;
     while (i < preserved_vecs_count) {
         int count = 0;
         int ii = i;
@@ -213,6 +253,90 @@ void jit_uni_eltwise_injector_f32<isa>::assign_regs() {
     vmm_aux5 = TRegS(preserved_vec_idxs[6]);
     vmm_aux6 = TRegS(preserved_vec_idxs[7]);
     vmm_aux7 = TRegS(preserved_vec_idxs[8]);
+}
+
+template <cpu_isa_t isa>
+void jit_uni_eltwise_injector_f32<isa>::assign_pred_regs() {
+    using namespace alg_kind;
+
+    if (is_fwd_) {
+        switch (alg_) {
+            case eltwise_relu_use_dst_for_bwd:
+            case eltwise_relu:
+            case eltwise_elu_use_dst_for_bwd:
+            case eltwise_elu:
+            case eltwise_tanh_use_dst_for_bwd:
+            case eltwise_tanh:
+            case eltwise_square:
+            case eltwise_abs:
+            case eltwise_sqrt_use_dst_for_bwd:
+            case eltwise_sqrt:
+            case eltwise_linear:
+            case eltwise_bounded_relu: break;
+            case eltwise_soft_relu:
+                preg_log0 = PReg(preserved_preg_idxs[0]);
+                preg_log1 = PReg(preserved_preg_idxs[1]);
+                preg_exp0 = PReg(preserved_preg_idxs[2]);
+                preg_exp1 = PReg(preserved_preg_idxs[3]);
+                break;
+            case eltwise_logistic_use_dst_for_bwd:
+            case eltwise_logistic: break;
+            case eltwise_exp_use_dst_for_bwd:
+            case eltwise_exp:
+                preg_exp0 = PReg(preserved_preg_idxs[0]);
+                preg_exp1 = PReg(preserved_preg_idxs[1]);
+                break;
+            case eltwise_gelu_tanh:
+            case eltwise_swish: break;
+            case eltwise_log:
+                preg_exp0 = PReg(preserved_preg_idxs[0]);
+                preg_exp1 = PReg(preserved_preg_idxs[1]);
+            case eltwise_clip:
+            case eltwise_pow:
+            case eltwise_gelu_erf:
+            case eltwise_round: break;
+            default: assert(!"unsupported eltwise algorithm");
+        }
+    } else {
+        switch (alg_) {
+            case eltwise_relu_use_dst_for_bwd:
+            case eltwise_relu:
+            case eltwise_elu_use_dst_for_bwd:
+            case eltwise_elu:
+            case eltwise_tanh_use_dst_for_bwd:
+            case eltwise_tanh:
+            case eltwise_square:
+            case eltwise_abs:
+            case eltwise_sqrt_use_dst_for_bwd:
+            case eltwise_sqrt:
+            case eltwise_linear:
+            case eltwise_bounded_relu: break;
+            case eltwise_soft_relu:
+                preg_log0 = PReg(preserved_preg_idxs[0]);
+                preg_log1 = PReg(preserved_preg_idxs[1]);
+                preg_exp0 = PReg(preserved_preg_idxs[2]);
+                preg_exp1 = PReg(preserved_preg_idxs[3]);
+                break;
+
+            case eltwise_logistic_use_dst_for_bwd:
+            case eltwise_logistic: break;
+            case eltwise_exp_use_dst_for_bwd:
+            case eltwise_exp:
+                preg_exp0 = PReg(preserved_preg_idxs[0]);
+                preg_exp1 = PReg(preserved_preg_idxs[1]);
+                break;
+            case eltwise_gelu_tanh:
+            case eltwise_swish: break;
+            case eltwise_log:
+                preg_log0 = PReg(preserved_preg_idxs[0]);
+                preg_log1 = PReg(preserved_preg_idxs[1]);
+                break;
+            case eltwise_clip:
+            case eltwise_pow:
+            case eltwise_gelu_erf: break;
+            default: assert(!"unsupported eltwise algorithm");
+        }
+    }
 }
 
 template <cpu_isa_t isa>
@@ -1549,6 +1673,70 @@ size_t jit_uni_eltwise_injector_f32<isa>::aux_vecs_count() {
             case eltwise_clip: return 3;
             case eltwise_pow: return 3;
             case eltwise_gelu_erf: return 6;
+            default: assert(!"unsupported eltwise algorithm");
+        }
+    }
+
+    return 0;
+}
+
+template <cpu_isa_t isa>
+size_t jit_uni_eltwise_injector_f32<isa>::aux_pregs_count() {
+    using namespace alg_kind;
+
+    if (is_fwd_) {
+        switch (alg_) {
+            case eltwise_relu_use_dst_for_bwd:
+            case eltwise_relu:
+            case eltwise_elu_use_dst_for_bwd:
+            case eltwise_elu:
+            case eltwise_tanh_use_dst_for_bwd:
+            case eltwise_tanh:
+            case eltwise_square:
+            case eltwise_abs:
+            case eltwise_sqrt_use_dst_for_bwd:
+            case eltwise_sqrt:
+            case eltwise_linear:
+            case eltwise_bounded_relu: return 0;
+            case eltwise_soft_relu: return 4;
+            case eltwise_logistic_use_dst_for_bwd:
+            case eltwise_logistic: return 0;
+            case eltwise_exp_use_dst_for_bwd:
+            case eltwise_exp: return 2;
+            case eltwise_gelu_tanh:
+            case eltwise_swish: return 0;
+            case eltwise_log: return 2;
+            case eltwise_clip:
+            case eltwise_pow:
+            case eltwise_gelu_erf:
+            case eltwise_round: return 0;
+            default: assert(!"unsupported eltwise algorithm");
+        }
+    } else {
+        switch (alg_) {
+            case eltwise_relu_use_dst_for_bwd:
+            case eltwise_relu:
+            case eltwise_elu_use_dst_for_bwd:
+            case eltwise_elu:
+            case eltwise_tanh_use_dst_for_bwd:
+            case eltwise_tanh:
+            case eltwise_square:
+            case eltwise_abs:
+            case eltwise_sqrt_use_dst_for_bwd:
+            case eltwise_sqrt:
+            case eltwise_linear:
+            case eltwise_bounded_relu: return 0;
+            case eltwise_soft_relu: return 4;
+            case eltwise_logistic_use_dst_for_bwd:
+            case eltwise_logistic:
+            case eltwise_exp_use_dst_for_bwd:
+            case eltwise_exp: return 2;
+            case eltwise_gelu_tanh:
+            case eltwise_swish: return 0;
+            case eltwise_log: return 2;
+            case eltwise_clip:
+            case eltwise_pow:
+            case eltwise_gelu_erf: return 0;
             default: assert(!"unsupported eltwise algorithm");
         }
     }
