@@ -450,11 +450,7 @@ void jit_uni_eltwise_injector_f32<isa>::relu_compute_vector_fwd(
 template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::relu_zero_ns_compute_vector_fwd(
         const TRegS &vmm_src) {
-    h->mov(PRegB(IDX(p_tmp0)), h->P_ALL_ONE.b);
-    h->mov(ZRegD(IDX(z_tmp)), ZRegD(IDX(table_val(zero))));
-    h->fmaxnm(z_tmp, p_tmp0, vmm_src);
-    h->fmax(z_tmp, p_tmp0, vmm_src);
-    h->mov(ZRegD(IDX(vmm_src)), ZRegD(IDX(z_tmp)));
+    h->fmaxnm(vmm_src, p_all, 0.f);
 }
 
 template <cpu_isa_t isa>
