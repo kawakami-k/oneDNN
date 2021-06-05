@@ -457,20 +457,18 @@ template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::elu_compute_vector_fwd(
         const TRegS &vmm_src) {
     // IMPORTANT: we use vmm_aux3 for the mask as exp_compute does not use it.
-    h->not_(p_tmp0.b, h->P_ALL_ONE / T_z, PRegB(IDX(p_all)));
-    h->mov(ZRegD(IDX(vmm_aux3)), ZRegD(IDX(vmm_src)));
-    h->mov(vmm_aux3, p_tmp0 / T_m, 0);
+    h->mov(ZRegD(vmm_aux3.getIdx()), ZRegD(vmm_src.getIdx()));
 
     // compute exponent
     exp_compute_vector_fwd(vmm_src);
 
     // alpha * (exp(x) - 1)
-    h->fsub(vmm_src, vmm_src, ZRegS(IDX(table_val(one))));
+    h->fsub(vmm_src, p_all / T_m, 1.f);
     h->fmul(vmm_src, vmm_src, ZRegS(IDX(table_val(alpha))));
 
     // combine with mask
-    compute_cmp_mask(vmm_aux3, table_val(zero), _cmp_gt_os);
-    blend_with_mask(vmm_src, vmm_aux3);
+    h->fcmgt(p_mask.s, p_all / T_z, vmm_aux3, 0.f);
+    h->mov(vmm_src, p_mask / T_m, vmm_aux3);
 }
 
 template <cpu_isa_t isa>
