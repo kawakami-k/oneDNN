@@ -1241,7 +1241,7 @@ template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::square_compute_vector_bwd(
         const TRegS &vmm_src) {
     // res = 2 * s
-    h->fmul(vmm_src, vmm_src, ZRegS(IDX(table_val(two))));
+    h->fmul(vmm_src, p_all / T_m, 2.f);
 }
 
 template <cpu_isa_t isa>
@@ -1261,10 +1261,7 @@ void jit_uni_eltwise_injector_f32<isa>::sqrt_compute_vector_bwd(
     // res = 0.5 / d = 0.5 / sqrt(s)
     if (!use_dst_) sqrt_compute_vector_fwd(vmm_src);
     h->mov(ZRegD(IDX(vmm_aux0)), ZRegD(IDX(table_val(half))));
-
-    h->mov(PRegB(IDX(p_tmp0)), h->P_ALL_ONE, h->P_ALL_ONE.b);
-    h->fdiv(vmm_aux0, p_tmp0, vmm_src);
-
+    h->fdiv(vmm_aux0, p_all, vmm_src);
     h->mov(ZRegD(IDX(vmm_src)), ZRegD(IDX(vmm_aux0)));
 }
 
