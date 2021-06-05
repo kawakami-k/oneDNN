@@ -692,9 +692,7 @@ template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::linear_compute_vector_fwd(
         const TRegS &vmm_src) {
     // compute x = alpha * x + beta;
-    h->not_(p_tmp0.b, h->P_ALL_ONE / T_z, PRegB(IDX(p_all)));
     h->mov(ZRegD(IDX(vmm_aux0)), ZRegD(IDX(table_val(alpha))));
-    h->mov(vmm_aux0, p_tmp0 / T_m, 0);
     h->fmad(vmm_src, p_all / T_m, vmm_aux0, ZRegS(IDX(table_val(beta))));
 }
 
