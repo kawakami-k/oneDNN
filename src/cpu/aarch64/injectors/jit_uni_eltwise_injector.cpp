@@ -438,12 +438,13 @@ void jit_uni_eltwise_injector_f32<isa>::exp_compute_vector_fwd(
 template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::relu_compute_vector_fwd(
         const TRegS &vmm_src) {
-    h->not_(p_tmp0.b, h->P_ALL_ONE / T_z, PRegB(IDX(p_all)));
-    h->mov(ZRegD(IDX(vmm_aux1)), ZRegD(IDX(vmm_src)));
-    h->mov(vmm_aux1, p_tmp0 / T_m, 0);
-    compute_cmp_mask(vmm_src, table_val(zero), _cmp_gt_os);
+    /* Negative values are multiplied by alpha.
+     Positive values are not modified. */
+    h->mov(ZRegD(vmm_aux0.getIdx()), ZRegD(vmm_src.getIdx()));
+    h->fminnm(vmm_src, p_all, 0.f);
+    h->fmaxnm(vmm_aux0, p_all, 0.f);
     h->fmul(vmm_src, vmm_src, ZRegS(IDX(table_val(alpha))));
-    blend_with_mask(vmm_src, vmm_aux1);
+    h->fadd(vmm_src, vmm_src, vmm_aux0);
 }
 
 template <cpu_isa_t isa>
