@@ -679,16 +679,13 @@ void jit_uni_eltwise_injector_f32<isa>::square_compute_vector_fwd(
 template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::abs_compute_vector_fwd(
         const TRegS &vmm_src) {
-    // compute abs(x) = _mm_and_ps(x, 01111..111));
-    h->and_(ZRegD(IDX(vmm_src)), ZRegD(IDX(vmm_src)),
-            ZRegD(IDX(table_val(positive_mask))));
+    h->fabs(vmm_src, p_all / T_m, vmm_src);
 }
 
 template <cpu_isa_t isa>
 void jit_uni_eltwise_injector_f32<isa>::sqrt_compute_vector_fwd(
         const TRegS &vmm_src) {
-    h->mov(PRegB(IDX(p_tmp0)), h->P_ALL_ONE.b, h->P_ALL_ONE.b);
-    h->fsqrt(vmm_src, p_tmp0 / T_m, vmm_src);
+    h->fsqrt(vmm_src, p_all / T_m, vmm_src);
 }
 
 template <cpu_isa_t isa>
